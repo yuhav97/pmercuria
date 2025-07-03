@@ -21,11 +21,11 @@
     },
     {
       "source": "/app",
-      "destination": "/public/app.html"
+      "destination": "/app.html"
     },
     {
       "source": "/(.*)",
-      "destination": "/public/$1"
+      "destination": "/$1"
     }
   ]
 }
