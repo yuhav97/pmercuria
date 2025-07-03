@@ -1,0 +1,16 @@
+{
+  "name": "mercuria-site",
+  "version": "1.0.0",
+  "description": "Revisor de texto com IA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Seu Nome",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "openai": "^4.52.7"
+  }
+}
