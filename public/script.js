@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Seleção dos Elementos do DOM ---
     const inputText = document.getElementById('inputText');
     const outputText = document.getElementById('outputText');
     const submitButton = document.getElementById('submitButton');
@@ -10,8 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const presentationStyleSelect = document.getElementById('presentationStyle');
     const loader = document.getElementById('loader');
 
+    // --- Variáveis de Estado ---
     let presentationData = null;
+    let coverImageData = null;
 
+    // --- Evento Principal: Gerar Apresentação ---
     submitButton.addEventListener('click', async () => {
         const text = inputText.value;
         const tone = toneSelect.value;
@@ -24,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Prepara a UI para o carregamento
         outputText.innerHTML = ''; 
         outputText.classList.remove('output-placeholder');
         loader.style.display = 'block';
@@ -31,8 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
         exportButton.style.display = 'none';
         submitButton.disabled = true;
         presentationData = null;
+        coverImageData = null;
 
         try {
+            // Chamada à API do backend
             const response = await fetch('/api/revise', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -46,9 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             
+            // Verifica se os dados recebidos são válidos
             if (data.slides && data.slides.length > 0) {
                 presentationData = data.slides;
-                displayPresentation(presentationData);
+                coverImageData = data.coverImage;
+                displayPresentation(presentationData); // Chama a função para exibir os slides
                 copyButton.style.display = 'block';
                 exportButton.style.display = 'block';
             } else {
@@ -64,8 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Função para Exibir os Slides na Tela ---
     function displayPresentation(slides) {
-        outputText.innerHTML = '';
+        outputText.innerHTML = ''; // Garante que a área está limpa
         slides.forEach((slide, index) => {
             const slideContainer = document.createElement('div');
             slideContainer.className = 'slide-content';
@@ -101,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- CORPO COMPLETO DA FUNÇÃO DE EXPORTAÇÃO ---
+    // --- Função para Exportar para .pptx ---
     async function exportToPptx() {
         if (!presentationData) return;
 
@@ -126,42 +136,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
 
-        const presentationTitle = presentationData[0]?.titulo || "Apresentação";
+        // Criação da Capa
+        let coverSlide = pres.addSlide();
+        if (coverImageData) {
+            coverSlide.background = { data: coverImageData };
+        } else {
+            coverSlide.background = { color: theme.background.color || "121212" };
+        }
+        coverSlide.addShape(pres.shapes.RECTANGLE, { x: 0, y: '40%', w: '100%', h: '25%', fill: { color: '000000', transparency: 50 } });
+        const mainTitle = presentationData[0]?.titulo || "Apresentação";
+        coverSlide.addText(mainTitle, { x: 0, y: '42%', w: '100%', h: 0.75, align: 'center', fontSize: 44, bold: true, color: 'FFFFFF', fontFace: theme.fontFace });
+        const mainSubtitle = presentationData[0]?.subtitulo || "";
+        coverSlide.addText(mainSubtitle, { x: 0, y: '52%', w: '100%', h: 0.5, align: 'center', fontSize: 20, color: 'F1F1F1', fontFace: theme.fontFace, italic: true });
+
+        // Criação do Slide Mestre para o conteúdo
         pres.defineSlideMaster({
             title: "MASTER_SLIDE",
             background: theme.background,
             objects: [
                 { line: { x: 0.5, y: 5.2, w: 12.3, line: { color: theme.titleColor, width: 1 } } },
-                { text: { text: presentationTitle, options: { x: 0.5, y: 5.3, w: "50%", h: 0.25, fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor } } },
+                { text: { text: mainTitle, options: { x: 0.5, y: 5.3, w: "50%", h: 0.25, fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor } } },
             ],
         });
 
+        // Loop para criar os slides de conteúdo
         for (const [index, slideData] of presentationData.entries()) {
             let pptxSlide = pres.addSlide({ masterName: "MASTER_SLIDE" });
-            pptxSlide.addText((index + 1).toString(), { x: 12.4, y: 5.3, w: 0.4, h: 0.25, align: 'right', fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor });
+            pptxSlide.addText((index + 2).toString(), { x: 12.4, y: 5.3, w: 0.4, h: 0.25, align: 'right', fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor });
             pptxSlide.addText(slideData.titulo || "Sem Título", { x: 0.5, y: 0.4, w: '90%', h: 0.75, fontSize: 36, bold: true, color: theme.titleColor, fontFace: theme.fontFace });
             pptxSlide.addText(slideData.subtitulo || "", { x: 0.5, y: 1.1, w: '90%', h: 0.5, fontSize: 20, color: theme.subtitleColor, fontFace: theme.fontFace, italic: (style !== 'Minimalista') });
             if (slideData.ilustracao) {
                 pptxSlide.addImage({ data: slideData.ilustracao, x: 0.5, y: 1.8, w: 5.5, h: 3.15 });
             }
             let textContent = Array.isArray(slideData.texto) ? slideData.texto.join('\n') : slideData.texto;
-            pptxSlide.addText(textContent || "", { x: 6.5, y: 1.8, w: 6.3, h: 3.15, fontSize: (style === 'Minimalista') ? 14 : 16, color: theme.textColor, fontFace: theme.fontFace, bullet: { indent: 20 }, valign: 'top' });
+            pptxSlide.addText(textContent || "", { x: 6.5, y: 1.8, w: 6.3, h: 3.15, fontSize: 16, color: theme.textColor, fontFace: theme.fontFace, bullet: { indent: 20 }, valign: 'top' });
         }
 
         pres.writeFile({ fileName: `apresentacao-${style.toLowerCase()}.pptx` });
     }
 
-    // --- CORPO COMPLETO DA FUNÇÃO DE COPIAR ---
+    // --- Função para Copiar o Texto ---
     copyButton.addEventListener('click', () => {
         if (!presentationData) return;
-
         let fullText = '';
         presentationData.forEach((slide, index) => {
             fullText += `--- SLIDE ${index + 1} ---\n\n`;
             fullText += `Título: ${slide.titulo}\n`;
             fullText += `Subtítulo: ${slide.subtitulo}\n\n`;
             fullText += `Conteúdo:\n`;
-
             if (Array.isArray(slide.texto)) {
                 fullText += slide.texto.join('\n');
             } else {
@@ -169,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             fullText += '\n\n\n';
         });
-        
         navigator.clipboard.writeText(fullText.trim())
             .then(() => {
                 copyButton.innerText = 'Copiado! ✅';
@@ -183,5 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     });
 
+    // --- Adiciona o evento ao botão de exportar ---
     exportButton.addEventListener('click', exportToPptx);
 });

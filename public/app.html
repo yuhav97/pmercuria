@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MercurIA</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>
+            MercurIA 
+            <img src="logo.png" alt="Logótipo MercurIA" class="title-icon">
+        </h1>
+        <p>Do seu texto a uma apresentação de impacto com o poder da IA.</p>
+    </header>
+
+    <main>
+        <!-- O resto do main continua exatamente igual -->
+        <div class="options-container">
+            <div class="select-group">
+                <label for="presentationStyle">Estilo da Apresentação:</label>
+                <select id="presentationStyle">
+                    <option value="Corporativo">Corporativo</option>
+                    <option value="Criativo">Criativo</option>
+                    <option value="Minimalista">Minimalista</option>
+                    <option value="Acadêmico">Acadêmico</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="tone">Tom de Voz:</label>
+                <select id="tone">
+                    <option value="Profissional">Profissional - Comunicação séria e formal</option>
+                    <option value="Didático">Didático - Para ensinar e explicar</option>
+                    <option value="Executivo">Executivo - Direto, focado em resultados</option>
+                    <option value="Amigável">Amigável - Informal, próximo e pessoal</option>
+                    <option value="Persuasivo">Persuasivo - Para convencer e vender</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="audience">Público Alvo:</label>
+                <select id="audience">
+                    <option value="Gerentes">Gerentes</option>
+                    <option value="Diretores">Diretores</option>
+                    <option value="Estudantes">Estudantes</option>
+                    <option value="Clientes em geral">Clientes em geral</option>
+                    <option value="Equipe técnica">Equipe técnica</option>
+                    <option value="Investidores">Investidores</option>
+                    <option value="Recursos Humanos">Recursos Humanos (RH)</option>
+                    <option value="Jornalistas">Jornalistas</option>
+                    <option value="Comunidade Acadêmica">Comunidade Acadêmica</option>
+                    <option value="Consumidores Finais">Consumidores Finais</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="slideCount">Número de Slides:</label>
+                <input type="number" id="slideCount" value="3" min="1" max="10">
+            </div>
+        </div>
+
+        <div class="text-areas-container">
+            <div class="text-box">
+                <textarea id="inputText" placeholder="Digite ou cole o tema ou o conteúdo base para sua apresentação..."></textarea>
+            </div>
+            <div class="text-box output-box">
+                <div class="output-header">
+                    <h3>Apresentação Gerada</h3>
+                    <div class="button-group">
+                        <button id="copyButton">Copiar Texto 📋</button>
+                        <button id="exportButton">Exportar .pptx 📊</button>
+                    </div>
+                </div>
+                <div id="outputText" class="output-placeholder">O resultado aparecerá aqui.</div>
+                <div id="loader" class="loader"></div>
+            </div>
+        </div>
+
+        <button id="submitButton">Gerar Apresentação 🚀</button>
+    </main>
+
+    <!-- A MUDANÇA ESTÁ AQUI -->
+    <footer>
+        <p>Plataforma criada por AVIA</p>
+        <div class="visitor-counter">
+            <!-- Este contador é único para o seu URL. Substitua se o seu URL mudar. -->
+            <img src="https://hits.sh/pmercuria.vercel.app.svg?style=flat-square&label=VISITAS&color=6A45FF&labelColor=1E1E1E" alt="Contador de Visitas"/>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

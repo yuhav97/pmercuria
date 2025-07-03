@@ -1,97 +1,314 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Título limpo, sem emoji -->
-    <title>MercurIA</title>
+    <title>MercurIA - Crie Apresentações de Impacto com IA</title>
+    <meta name="description" content="Transforme suas ideias em apresentações profissionais de PowerPoint em segundos. Deixe nossa IA criar os textos, imagens e design para você.">
     
-    <!-- NOVO: Define o ícone do separador do navegador (favicon) -->
+    <!-- Favicon (use o seu logo) -->
     <link rel="icon" type="image/png" href="logo.png">
 
-    <link rel="stylesheet" href="style.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Estilos personalizados para complementar o Tailwind */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #121212;
+            color: #EAEAEA;
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #A78BFA, #00E5FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-glow {
+            box-shadow: 0 0 60px -15px rgba(167, 139, 250, 0.4);
+        }
+        /* Estilo para o cursor a piscar na animação */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <header>
-        <h1>
-            MercurIA 
-            <img src="logo.png" alt="Logótipo MercurIA" class="title-icon">
-        </h1>
-        <p>Do seu texto a uma apresentação de impacto com o poder da IA.</p>
+    <!-- Cabeçalho e Navegação -->
+    <header class="sticky top-0 w-full z-20 bg-gray-900/50 backdrop-blur-lg border-b border-gray-800">
+        <div class="container mx-auto px-6 flex justify-between items-center py-4">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Logótipo MercurIA" class="w-10 h-10">
+                <span class="text-2xl font-bold text-white">MercurIA</span>
+            </div>
+            <nav class="hidden md:flex items-center gap-6 text-sm">
+                <a href="#features" class="hover:text-purple-400 transition-colors">Recursos</a>
+                <a href="#use-cases" class="hover:text-purple-400 transition-colors">Casos de Uso</a>
+                <a href="#testimonials" class="hover:text-purple-400 transition-colors">Testemunhos</a>
+            </nav>
+            <a href="/app" class="hidden md:inline-block bg-purple-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-purple-700 transition-colors">
+                Começar a Criar
+            </a>
+        </div>
     </header>
 
     <main>
-        <!-- O resto do HTML continua exatamente igual -->
-        <div class="options-container">
-            <div class="select-group">
-                <label for="presentationStyle">Estilo da Apresentação:</label>
-                <select id="presentationStyle">
-                    <option value="Corporativo">Corporativo</option>
-                    <option value="Criativo">Criativo</option>
-                    <option value="Minimalista">Minimalista</option>
-                    <option value="Acadêmico">Acadêmico</option>
-                </select>
-            </div>
-            <div class="select-group">
-                <label for="tone">Tom de Voz:</label>
-                <select id="tone">
-                    <option value="Profissional">Profissional - Comunicação séria e formal</option>
-                    <option value="Didático">Didático - Para ensinar e explicar</option>
-                    <option value="Executivo">Executivo - Direto, focado em resultados</option>
-                    <option value="Amigável">Amigável - Informal, próximo e pessoal</option>
-                    <option value="Persuasivo">Persuasivo - Para convencer e vender</option>
-                </select>
-            </div>
-            <div class="select-group">
-                <label for="audience">Público Alvo:</label>
-                <select id="audience">
-                    <option value="Gerentes">Gerentes</option>
-                    <option value="Diretores">Diretores</option>
-                    <option value="Estudantes">Estudantes</option>
-                    <option value="Clientes em geral">Clientes em geral</option>
-                    <option value="Equipe técnica">Equipe técnica</option>
-                    <option value="Investidores">Investidores</option>
-                    <option value="Recursos Humanos">Recursos Humanos (RH)</option>
-                    <option value="Jornalistas">Jornalistas</option>
-                    <option value="Comunidade Acadêmica">Comunidade Acadêmica</option>
-                    <option value="Consumidores Finais">Consumidores Finais</option>
-                </select>
-            </div>
-            <div class="select-group">
-                <label for="slideCount">Número de Slides:</label>
-                <input type="number" id="slideCount" value="3" min="1" max="10">
-            </div>
-        </div>
-
-        <div class="text-areas-container">
-            <div class="text-box">
-                <textarea id="inputText" placeholder="Digite ou cole o tema ou o conteúdo base para sua apresentação..."></textarea>
-            </div>
-            <div class="text-box output-box">
-                <div class="output-header">
-                    <h3>Apresentação Gerada</h3>
-                    <div class="button-group">
-                        <button id="copyButton">Copiar Texto 📋</button>
-                        <button id="exportButton">Exportar .pptx 📊</button>
+        <!-- Secção Principal (Hero) -->
+        <section class="relative min-h-screen flex items-center justify-center text-center overflow-hidden pt-20 -mt-20">
+            <div class="absolute top-0 left-0 w-full h-full bg-grid-gray-700/[0.2] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
+            <div class="container mx-auto px-6 z-10">
+                <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-4">
+                    Transforme Ideias em Apresentações <span class="gradient-text">Inesquecíveis</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-8">
+                    Deixe nossa IA criar os slides, textos e ilustrações para você. Exporte para PowerPoint com um clique e impressione sua audiência.
+                </p>
+                <a href="/app" class="bg-purple-600 text-white font-bold py-4 px-8 rounded-lg text-lg hover:bg-purple-700 transition-transform hover:scale-105 inline-block">
+                    Comece a Criar Gratuitamente
+                </a>
+                
+                <!-- Demonstração Animada -->
+                <div class="mt-16 w-full max-w-4xl mx-auto">
+                    <div class="hero-glow bg-gray-900/50 border border-gray-700 rounded-xl p-4 backdrop-blur-sm text-left">
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Lado Esquerdo: Input -->
+                            <div class="bg-gray-800 p-4 rounded-lg">
+                                <label class="text-sm font-semibold text-gray-300">Seu Tema:</label>
+                                <div id="demo-input" class="mt-2 p-3 h-24 bg-gray-900 rounded text-gray-200 font-mono typing-cursor"></div>
+                                <button id="demo-button" class="mt-4 w-full bg-purple-600 text-white font-semibold py-2 rounded-lg opacity-50 cursor-not-allowed">
+                                    Gerar Apresentação
+                                </button>
+                            </div>
+                            <!-- Lado Direito: Output -->
+                            <div id="demo-output" class="bg-gray-800 p-4 rounded-lg flex items-center justify-center">
+                                <span class="text-gray-500">O resultado aparecerá aqui...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div id="outputText" class="output-placeholder">O resultado aparecerá aqui.</div>
-                <div id="loader" class="loader"></div>
-            </div>
-        </div>
+                <!-- Fim da Demonstração Animada -->
 
-        <button id="submitButton">Gerar Apresentação 🚀</button>
+            </div>
+        </section>
+
+        <!-- Secção "Como Funciona" -->
+        <section id="how-it-works" class="py-20">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl font-bold text-white mb-3">Tudo em 3 Passos Simples</h2>
+                <p class="text-gray-400 mb-12">O processo é rápido, intuitivo e poderoso.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-gray-800/50 border border-gray-700 p-8 rounded-xl">
+                        <div class="mb-4 inline-block p-3 bg-purple-600/20 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Descreva sua Ideia</h3>
+                        <p class="text-gray-400">Insira um tema, um resumo ou um texto base. Escolha o tom, o público e o estilo visual.</p>
+                    </div>
+                    <div class="bg-gray-800/50 border border-gray-700 p-8 rounded-xl">
+                        <div class="mb-4 inline-block p-3 bg-purple-600/20 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">A IA Entra em Ação</h3>
+                        <p class="text-gray-400">O MercurIA gera o conteúdo, divide em slides e cria ilustrações únicas para cada tópico.</p>
+                    </div>
+                    <div class="bg-gray-800/50 border border-gray-700 p-8 rounded-xl">
+                        <div class="mb-4 inline-block p-3 bg-purple-600/20 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Exporte e Apresente</h3>
+                        <p class="text-gray-400">Receba um arquivo `.pptx` pronto para usar, com um design profissional. Edite se precisar e impressione.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Secção de Recursos -->
+        <section id="features" class="py-20 bg-gray-900/30">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-white">Recursos que <span class="gradient-text">Impulsionam</span> sua Produtividade</h2>
+                    <p class="text-gray-400 mt-2">Tudo o que você precisa para criar apresentações memoráveis, mais rápido.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Conteúdo Inteligente e Coerente</h3>
+                        <p class="text-gray-400">Nossa IA estrutura sua ideia em uma narrativa lógica, com introdução, desenvolvimento e conclusão.</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Ilustrações Únicas para Cada Slide</h3>
+                        <p class="text-gray-400">Diga adeus aos bancos de imagens. Receba ilustrações contextuais e exclusivas para cada tópico.</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Designs Profissionais</h3>
+                        <p class="text-gray-400">Escolha entre estilos como Corporativo, Criativo ou Minimalista para adaptar o visual da sua apresentação.</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Exportação para PowerPoint</h3>
+                        <p class="text-gray-400">Receba um arquivo `.pptx` totalmente editável. Faça ajustes finos e adicione seu toque final facilmente.</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Capa de Apresentação Automática</h3>
+                        <p class="text-gray-400">Cada apresentação começa com uma capa de alto impacto, com uma imagem de fundo exclusiva para o seu tema.</p>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold text-cyan-400 mb-2">Controle Total</h3>
+                        <p class="text-gray-400">Ajuste o tom de voz, o público-alvo e o número de slides para um resultado perfeitamente alinhado.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Secção de Casos de Uso -->
+        <section id="use-cases" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-white">Perfeito para <span class="gradient-text">Qualquer Desafio</span></h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="border border-gray-700 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-white mb-2">Profissionais de Marketing</h3>
+                        <p class="text-gray-400">Crie propostas comerciais, relatórios de campanha e apresentações para clientes em minutos, não em horas.</p>
+                    </div>
+                    <div class="border border-gray-700 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-white mb-2">Estudantes e Educadores</h3>
+                        <p class="text-gray-400">Transforme trabalhos, teses e planos de aula em apresentações visualmente atraentes e bem estruturadas.</p>
+                    </div>
+                    <div class="border border-gray-700 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-white mb-2">Fundadores e Executivos</h3>
+                        <p class="text-gray-400">Desenvolva pitches para investidores, apresentações internas e relatórios para o conselho de forma rápida e profissional.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Secção de Testemunhos -->
+        <section id="testimonials" class="py-20 bg-gray-900/30">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-white">O que a galera anda dizendo</h2>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <p class="text-gray-300 mb-4">"Sério, o MercurIA é um divisor de águas. O que antes era uma tarde inteira de trabalho, agora vira uma apresentação impecável em minutos. A qualidade final é surreal."</p>
+                        <div class="font-semibold text-white">- Joana S., Gerente de Marketing</div>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <p class="text-gray-300 mb-4">"Na faculdade, essa ferramenta é simplesmente essencial. Me ajuda a organizar o raciocínio e a montar uns trabalhos com um visual que impressiona qualquer professor. As ilustrações são um show à parte."</p>
+                        <div class="font-semibold text-white">- Miguel L., Estudante de Engenharia</div>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-lg">
+                        <p class="text-gray-300 mb-4">"É outro nível de produtividade. Transformar uma ideia bruta em uma apresentação completa, com design e imagens, em um clique? Virou uma ferramenta indispensável no meu dia a dia."</p>
+                        <div class="font-semibold text-white">- Carla R., Fundadora de Startup</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Secção Final de CTA -->
+        <section class="py-20">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl font-bold text-white mb-4">Pronto para revolucionar suas apresentações?</h2>
+                <p class="text-lg text-gray-300 max-w-2xl mx-auto mb-8">Poupe tempo, impressione sua audiência e liberte sua criatividade.</p>
+                <a href="/app" class="bg-purple-600 text-white font-bold py-4 px-8 rounded-lg text-lg hover:bg-purple-700 transition-transform hover:scale-105 inline-block">
+                    Experimente o MercurIA Gratuitamente
+                </a>
+            </div>
+        </section>
+
     </main>
 
-    <footer>
-        <p>Plataforma criada por AVIA</p>
+    <!-- Rodapé -->
+    <footer class="border-t border-gray-800 py-8">
+        <div class="container mx-auto px-6 text-center text-gray-500">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <img src="logo.png" alt="Logótipo MercurIA" class="w-6 h-6">
+                <span class="text-lg font-semibold">MercurIA</span>
+            </div>
+            <p>Plataforma criada por AVIA</p>
+            <p class="text-sm mt-2">&copy; 2024 MercurIA. Todos os direitos reservados.</p>
+        </div>
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Script para a Animação -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const demoInput = document.getElementById('demo-input');
+            const demoOutput = document.getElementById('demo-output');
+            const demoButton = document.getElementById('demo-button');
+            
+            const textToType = "Uma apresentação sobre a história da exploração espacial, com foco nas missões Apollo.";
+            let charIndex = 0;
+
+            function typeText() {
+                if (charIndex < textToType.length) {
+                    demoInput.textContent += textToType.charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeText, 50); // Velocidade da digitação
+                } else {
+                    demoInput.classList.remove('typing-cursor');
+                    demoButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    demoButton.classList.add('hover:bg-purple-700');
+                    setTimeout(simulateGeneration, 1000); // Espera 1s e simula o clique
+                }
+            }
+
+            function simulateGeneration() {
+                // Simula o clique e o loader
+                demoOutput.innerHTML = `
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400"></div>
+                `;
+                setTimeout(showResults, 2000); // Mostra os resultados após 2s
+            }
+
+            function showResults() {
+                // Mostra cards de slides mais realistas
+                demoOutput.innerHTML = `
+                    <div class="w-full h-full space-y-2 overflow-hidden text-left">
+                        <div class="bg-gray-700 p-2 rounded animate-fade-in-up" style="animation-delay: 0ms;">
+                            <h4 class="text-xs font-bold text-purple-300">Slide 1</h4>
+                            <p class="text-xs text-gray-400 truncate">Os Pioneiros e a Corrida Espacial</p>
+                        </div>
+                        <div class="bg-gray-700 p-2 rounded animate-fade-in-up" style="animation-delay: 200ms;">
+                            <h4 class="text-xs font-bold text-purple-300">Slide 2</h4>
+                            <p class="text-xs text-gray-400 truncate">A Chegada à Lua: Missão Apollo 11</p>
+                        </div>
+                        <div class="bg-gray-700 p-2 rounded animate-fade-in-up" style="animation-delay: 400ms;">
+                            <h4 class="text-xs font-bold text-purple-300">Slide 3</h4>
+                            <p class="text-xs text-gray-400 truncate">O Futuro: Marte e Além</p>
+                        </div>
+                    </div>
+                `;
+
+                // Adiciona uma pequena animação de fade-in para os resultados
+                const keyframes = `
+                    @keyframes fade-in-up {
+                        from { opacity: 0; transform: translateY(10px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+                `;
+                const styleSheet = document.createElement("style");
+                styleSheet.type = "text/css";
+                styleSheet.innerText = keyframes;
+                document.head.appendChild(styleSheet);
+            }
+
+            // Inicia a animação
+            setTimeout(typeText, 1500);
+        });
+    </script>
+
 </body>
 </html>
