@@ -7,20 +7,12 @@
       "config": {
         "maxDuration": 60
       }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
     }
   ],
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/(.*)",
       "destination": "/server.js"
-    },
-    {
-      "source": "/app",
-      "destination": "/app.html"
     }
   ]
 }
