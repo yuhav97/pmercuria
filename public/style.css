@@ -46,7 +46,6 @@ header h1 {
     height: 50px;
 }
 
-/* --- INÍCIO DA ALTERAÇÃO --- */
 main {
     width: 100%;
     max-width: 1200px;
@@ -54,9 +53,8 @@ main {
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
-    margin-bottom: 4rem; /* Aumenta o espaço abaixo do conteúdo principal */
+    margin-bottom: 4rem;
 }
-/* --- FIM DA ALTERAÇÃO --- */
 
 .options-container {
     display: flex;
@@ -89,6 +87,45 @@ select, input[type="number"] {
 
 input[type="number"] {
     width: 100px;
+}
+
+.logo-upload-button {
+    background-color: #333;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.logo-upload-button:hover {
+    background-color: #444;
+}
+
+.radio-group {
+    display: flex;
+    gap: 15px;
+    background-color: var(--panel-color);
+    padding: 5px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.radio-group label {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.radio-group input[type="radio"] {
+    accent-color: var(--primary-color);
 }
 
 .text-areas-container {

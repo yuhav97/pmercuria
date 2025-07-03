@@ -10,10 +10,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const slideCountInput = document.getElementById('slideCount');
     const presentationStyleSelect = document.getElementById('presentationStyle');
     const loader = document.getElementById('loader');
+    const logoUploadInput = document.getElementById('logoUpload');
+    const logoPositionGroup = document.getElementById('logoPositionGroup');
 
     // --- Variáveis de Estado ---
     let presentationData = null;
     let coverImageData = null;
+    let uploadedLogoData = null;
+
+    // --- Evento para lidar com o upload do logótipo ---
+    logoUploadInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) {
+            logoPositionGroup.style.display = 'none';
+            uploadedLogoData = null;
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            uploadedLogoData = e.target.result;
+            logoPositionGroup.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    });
 
     // --- Evento Principal: Gerar Apresentação ---
     submitButton.addEventListener('click', async () => {
@@ -28,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Prepara a UI para o carregamento
         outputText.innerHTML = ''; 
         outputText.classList.remove('output-placeholder');
         loader.style.display = 'block';
@@ -39,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
         coverImageData = null;
 
         try {
-            // Chamada à API do backend
             const response = await fetch('/api/revise', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -47,26 +64,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Erro do servidor: ${response.status}. Resposta: ${errorText}`);
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Erro do servidor: ${response.status}`);
             }
 
             const data = await response.json();
             
-            // Verifica se os dados recebidos são válidos
             if (data.slides && data.slides.length > 0) {
                 presentationData = data.slides;
                 coverImageData = data.coverImage;
-                displayPresentation(presentationData); // Chama a função para exibir os slides
+                displayPresentation(presentationData);
                 copyButton.style.display = 'block';
                 exportButton.style.display = 'block';
             } else {
-                throw new Error("A resposta da IA foi recebida, mas não continha slides válidos.");
+                throw new Error("A resposta da IA não continha slides válidos.");
             }
 
         } catch (error) {
             console.error('FALHA CRÍTICA NO FRONTEND:', error);
-            outputText.innerHTML = `<div style="color: #ff8a80; padding: 15px;"><h4>Ocorreu um erro ao processar a apresentação.</h4><p><strong>Detalhes:</strong> ${error.message}</p></div>`;
+            outputText.innerHTML = `<div style="color: #ff8a80; padding: 15px;"><h4>Ocorreu um erro:</h4><p>${error.message}</p></div>`;
         } finally {
             loader.style.display = 'none';
             submitButton.disabled = false;
@@ -75,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Função para Exibir os Slides na Tela ---
     function displayPresentation(slides) {
-        outputText.innerHTML = ''; // Garante que a área está limpa
+        outputText.innerHTML = '';
         slides.forEach((slide, index) => {
             const slideContainer = document.createElement('div');
             slideContainer.className = 'slide-content';
@@ -136,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
 
-        // Criação da Capa
         let coverSlide = pres.addSlide();
         if (coverImageData) {
             coverSlide.background = { data: coverImageData };
@@ -149,17 +164,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainSubtitle = presentationData[0]?.subtitulo || "";
         coverSlide.addText(mainSubtitle, { x: 0, y: '52%', w: '100%', h: 0.5, align: 'center', fontSize: 20, color: 'F1F1F1', fontFace: theme.fontFace, italic: true });
 
-        // Criação do Slide Mestre para o conteúdo
-        pres.defineSlideMaster({
-            title: "MASTER_SLIDE",
-            background: theme.background,
-            objects: [
-                { line: { x: 0.5, y: 5.2, w: 12.3, line: { color: theme.titleColor, width: 1 } } },
-                { text: { text: mainTitle, options: { x: 0.5, y: 5.3, w: "50%", h: 0.25, fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor } } },
-            ],
-        });
+        const masterObjects = [
+            { line: { x: 0.5, y: 5.2, w: 12.3, line: { color: theme.titleColor, width: 1 } } },
+            { text: { text: mainTitle, options: { x: 0.5, y: 5.3, w: "50%", h: 0.25, fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor } } },
+        ];
 
-        // Loop para criar os slides de conteúdo
+        if (uploadedLogoData) {
+            const selectedPosition = document.querySelector('input[name="logoPosition"]:checked').value;
+            let logoCoords = { x: 12.3, y: 5.25 };
+            switch (selectedPosition) {
+                case 'bottom-left': logoCoords = { x: 0.5, y: 5.25 }; break;
+                case 'top-right': logoCoords = { x: 12.3, y: 0.25 }; break;
+                case 'top-left': logoCoords = { x: 0.5, y: 0.25 }; break;
+            }
+            masterObjects.push({ image: { data: uploadedLogoData, x: logoCoords.x, y: logoCoords.y, w: 0.5, h: 0.5 } });
+        }
+        
+        pres.defineSlideMaster({ title: "MASTER_SLIDE", background: theme.background, objects: masterObjects });
+
         for (const [index, slideData] of presentationData.entries()) {
             let pptxSlide = pres.addSlide({ masterName: "MASTER_SLIDE" });
             pptxSlide.addText((index + 2).toString(), { x: 12.4, y: 5.3, w: 0.4, h: 0.25, align: 'right', fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor });

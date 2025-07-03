@@ -3,3 +3,4 @@ node_modules
 
 # Ignorar arquivos de variáveis de ambiente locais
 .env
+.vercel
