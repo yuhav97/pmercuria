@@ -1,27 +1,33 @@
 {
   "version": 2,
-  "cleanUrls": true,
   "builds": [
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
-    },
     {
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
         "maxDuration": 60
       }
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/server.js"
     },
     {
-      "source": "/app",
-      "destination": "/app.html"
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/app",
+      "dest": "/app.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
