@@ -39,19 +39,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ text, tone, audience, slideCount, presentationStyle }),
             });
 
-            console.log("Status da resposta do servidor:", response.status, response.statusText);
-
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Erro do servidor: ${response.status}. Resposta: ${errorText}`);
             }
 
             const data = await response.json();
-            console.log("Dados JSON recebidos com sucesso:", data);
             
             if (data.slides && data.slides.length > 0) {
                 presentationData = data.slides;
-                displayPresentation(presentationData); // Chama a função que agora está completa
+                displayPresentation(presentationData);
                 copyButton.style.display = 'block';
                 exportButton.style.display = 'block';
             } else {
@@ -67,11 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- INÍCIO DA FUNÇÃO CORRIGIDA E COMPLETA ---
     function displayPresentation(slides) {
-        // Limpa qualquer conteúdo anterior para garantir
         outputText.innerHTML = '';
-
         slides.forEach((slide, index) => {
             const slideContainer = document.createElement('div');
             slideContainer.className = 'slide-content';
@@ -94,18 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
             subtitle.innerText = slide.subtitulo || 'Sem Subtítulo';
 
             const content = document.createElement('p');
-            
             let textContent = slide.texto;
-            let finalHtml = '';
-
-            if (Array.isArray(textContent)) {
-                finalHtml = textContent.join('<br>');
-            } else if (typeof textContent === 'string') {
-                finalHtml = textContent.replace(/\n/g, '<br>');
-            } else {
-                finalHtml = 'Sem conteúdo.';
-            }
-
+            let finalHtml = Array.isArray(textContent) ? textContent.join('<br>') : (typeof textContent === 'string' ? textContent.replace(/\n/g, '<br>') : 'Sem conteúdo.');
             content.innerHTML = finalHtml;
 
             slideContainer.appendChild(slideTitle);
@@ -116,32 +100,88 @@ document.addEventListener('DOMContentLoaded', () => {
             outputText.appendChild(slideContainer);
         });
     }
-    // --- FIM DA FUNÇÃO CORRIGIDA E COMPLETA ---
 
+    // --- CORPO COMPLETO DA FUNÇÃO DE EXPORTAÇÃO ---
     async function exportToPptx() {
-        // ... (a função de exportação continua igual)
+        if (!presentationData) return;
+
+        const pres = new PptxGenJS();
+        pres.layout = "LAYOUT_WIDE";
+        const style = presentationStyleSelect.value;
+        let theme = {};
+
+        switch (style) {
+            case 'Criativo':
+                theme = { background: { color: "1A1A1A" }, titleColor: "FEA82F", subtitleColor: "9B59B6", textColor: "F1F1F1", fontFace: "Montserrat" };
+                break;
+            case 'Minimalista':
+                theme = { background: { color: "FFFFFF" }, titleColor: "222222", subtitleColor: "AAAAAA", textColor: "555555", fontFace: "Helvetica Light" };
+                break;
+            case 'Acadêmico':
+                theme = { background: { color: "FFFFFF" }, titleColor: "00205B", subtitleColor: "A50026", textColor: "000000", fontFace: "Garamond" };
+                break;
+            case 'Corporativo':
+            default:
+                theme = { background: { color: "FFFFFF" }, titleColor: "00407A", subtitleColor: "0066CC", textColor: "333333", fontFace: "Calibri" };
+                break;
+        }
+
+        const presentationTitle = presentationData[0]?.titulo || "Apresentação";
+        pres.defineSlideMaster({
+            title: "MASTER_SLIDE",
+            background: theme.background,
+            objects: [
+                { line: { x: 0.5, y: 5.2, w: 12.3, line: { color: theme.titleColor, width: 1 } } },
+                { text: { text: presentationTitle, options: { x: 0.5, y: 5.3, w: "50%", h: 0.25, fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor } } },
+            ],
+        });
+
+        for (const [index, slideData] of presentationData.entries()) {
+            let pptxSlide = pres.addSlide({ masterName: "MASTER_SLIDE" });
+            pptxSlide.addText((index + 1).toString(), { x: 12.4, y: 5.3, w: 0.4, h: 0.25, align: 'right', fontFace: theme.fontFace, fontSize: 10, color: theme.subtitleColor });
+            pptxSlide.addText(slideData.titulo || "Sem Título", { x: 0.5, y: 0.4, w: '90%', h: 0.75, fontSize: 36, bold: true, color: theme.titleColor, fontFace: theme.fontFace });
+            pptxSlide.addText(slideData.subtitulo || "", { x: 0.5, y: 1.1, w: '90%', h: 0.5, fontSize: 20, color: theme.subtitleColor, fontFace: theme.fontFace, italic: (style !== 'Minimalista') });
+            if (slideData.ilustracao) {
+                pptxSlide.addImage({ data: slideData.ilustracao, x: 0.5, y: 1.8, w: 5.5, h: 3.15 });
+            }
+            let textContent = Array.isArray(slideData.texto) ? slideData.texto.join('\n') : slideData.texto;
+            pptxSlide.addText(textContent || "", { x: 6.5, y: 1.8, w: 6.3, h: 3.15, fontSize: (style === 'Minimalista') ? 14 : 16, color: theme.textColor, fontFace: theme.fontFace, bullet: { indent: 20 }, valign: 'top' });
+        }
+
+        pres.writeFile({ fileName: `apresentacao-${style.toLowerCase()}.pptx` });
     }
 
+    // --- CORPO COMPLETO DA FUNÇÃO DE COPIAR ---
     copyButton.addEventListener('click', () => {
-        // ... (a função de copiar continua igual)
+        if (!presentationData) return;
+
+        let fullText = '';
+        presentationData.forEach((slide, index) => {
+            fullText += `--- SLIDE ${index + 1} ---\n\n`;
+            fullText += `Título: ${slide.titulo}\n`;
+            fullText += `Subtítulo: ${slide.subtitulo}\n\n`;
+            fullText += `Conteúdo:\n`;
+
+            if (Array.isArray(slide.texto)) {
+                fullText += slide.texto.join('\n');
+            } else {
+                fullText += slide.texto || '';
+            }
+            fullText += '\n\n\n';
+        });
+        
+        navigator.clipboard.writeText(fullText.trim())
+            .then(() => {
+                copyButton.innerText = 'Copiado! ✅';
+                setTimeout(() => {
+                    copyButton.innerText = 'Copiar Tudo 📋';
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Erro ao copiar texto: ', err);
+                alert('Não foi possível copiar o texto.');
+            });
     });
 
     exportButton.addEventListener('click', exportToPptx);
 });
-```
-
-### O Que Fazer Agora
-
-1.  **Substitua o conteúdo** do seu ficheiro `public/script.js` por este novo código completo.
-2.  **Faça o deploy desta correção final:**
-    * No seu terminal:
-        ```bash
-        git add public/script.js
-        ```bash
-        git commit -m "Corrige a função displayPresentation no frontend"
-        ```bash
-        git push
-        ```
-3.  Aguarde o deploy da Vercel terminar.
-
-Estou extremamente confiante de que esta é a solução. A consola provou que todas as partes do sistema estão a funcionar, exceto a parte final de "desenhar" na tela, que este código agora corrige de v
