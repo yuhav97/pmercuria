@@ -1,5 +1,8 @@
 // server.js
 
+// NOVO: Importa a função de injeção do Vercel Analytics
+const { inject } = require('@vercel/analytics');
+
 require('dotenv').config();
 const express = require('express');
 const OpenAI = require('openai');
@@ -21,14 +24,13 @@ app.use(express.json());
 
 app.post('/api/revise', async (req, res) => {
     try {
-        // O `presentationStyle` é recebido, mas não será mais usado aqui.
         const { text, tone, audience, slideCount, presentationStyle } = req.body;
 
         if (!text) {
             return res.status(400).json({ error: 'O texto base é obrigatório.' });
         }
 
-        // ETAPA 1: Gerar o texto dos slides, sem influência do estilo visual.
+        // ETAPA 1: Gerar o texto dos slides
         const textPromptSystem = `
             Você é um especialista em criar conteúdo para apresentações. Sua tarefa é transformar um tema em ${slideCount} slides.
             O tom de voz deve ser **${tone}** e o público-alvo é **${audience}**.
@@ -47,11 +49,10 @@ app.post('/api/revise', async (req, res) => {
         const slideData = JSON.parse(textCompletion.choices[0].message.content);
         let slides = slideData.slides || [];
 
-        // ETAPA 2: Gerar uma ilustração para cada slide, sem influência do estilo visual.
+        // ETAPA 2: Gerar uma ilustração para cada slide
         const slidesWithImages = [];
         for (const slide of slides) {
             const imageContext = `${slide.titulo} - ${slide.subtitulo || ''}`;
-            // O prompt da imagem agora é padronizado e focado apenas no conteúdo.
             const imagePrompt = `Uma ilustração vetorial minimalista e conceitual sobre o tema: "${imageContext}". Fundo branco. Importante: a imagem não deve conter nenhum tipo de texto, letras ou palavras.`;
             
             console.log(`- Gerando imagem para: "${imageContext}"`);
@@ -82,6 +83,9 @@ app.post('/api/revise', async (req, res) => {
         res.status(500).json({ error: 'Falha ao gerar a apresentação.' });
     }
 });
+
+// NOVO: Injeta o script do Vercel Analytics antes de iniciar o servidor
+inject();
 
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
