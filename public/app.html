@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MercurIA - Criador de Apresentações</title>
+    <title>MercurIA - Gerador Inteligente</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -18,86 +20,87 @@
             MercurIA 
             <img src="logo.png" alt="Logótipo MercurIA" class="title-icon">
         </h1>
-        <p>Do seu texto a uma apresentação de impacto com o poder da IA.</p>
+        <p>A sua ideia, transformada em apresentações e relatórios de impacto.</p>
     </header>
 
     <main>
         <div class="options-container">
-            <!-- ... (as outras opções continuam iguais) ... -->
             <div class="select-group">
-                <label for="presentationStyle">Estilo da Apresentação:</label>
-                <select id="presentationStyle">
-                    <option value="Corporativo">Corporativo</option>
-                    <option value="Criativo">Criativo</option>
-                    <option value="Minimalista">Minimalista</option>
-                    <option value="Acadêmico">Acadêmico</option>
+                <label for="outputType">Qual o seu objetivo?</label>
+                <select id="outputType">
+                    <option value="presentation">Criar Apresentação de Slides</option>
+                    <option value="report">Analisar Dados e Criar Relatório</option>
                 </select>
             </div>
+
+            <div class="select-group">
+                <label for="improvementLevel">Nível de Melhoria:</label>
+                <select id="improvementLevel">
+                    <option value="review">Revisão e Estruturação Simples</option>
+                    <option value="enhance">Revisão e Melhoria do Conteúdo</option>
+                </select>
+            </div>
+
             <div class="select-group">
                 <label for="tone">Tom de Voz:</label>
                 <select id="tone">
-                    <option value="Profissional">Profissional - Comunicação séria e formal</option>
-                    <option value="Didático">Didático - Para ensinar e explicar</option>
-                    <option value="Executivo">Executivo - Direto, focado em resultados</option>
-                    <option value="Amigável">Amigável - Informal, próximo e pessoal</option>
-                    <option value="Persuasivo">Persuasivo - Para convencer e vender</option>
+                    <option value="Profissional">Profissional</option>
+                    <option value="Didático">Didático</option>
+                    <option value="Executivo">Executivo</option>
+                    <option value="Amigável">Amigável</option>
+                    <option value="Persuasivo">Persuasivo</option>
                 </select>
             </div>
+
             <div class="select-group">
                 <label for="audience">Público Alvo:</label>
                 <select id="audience">
-                    <option value="Gerentes">Gerentes</option>
                     <option value="Diretores">Diretores</option>
-                    <option value="Estudantes">Estudantes</option>
-                    <option value="Clientes em geral">Clientes em geral</option>
-                    <option value="Equipe técnica">Equipe técnica</option>
+                    <option value="Gerentes">Gerentes</option>
                     <option value="Investidores">Investidores</option>
-                    <option value="Recursos Humanos">Recursos Humanos (RH)</option>
-                    <option value="Jornalistas">Jornalistas</option>
-                    <option value="Comunidade Acadêmica">Comunidade Acadêmica</option>
-                    <option value="Consumidores Finais">Consumidores Finais</option>
+                    <option value="Equipe técnica">Equipe técnica</option>
+                    <option value="Estudantes">Estudantes</option>
                 </select>
             </div>
-            <div class="select-group">
+
+            <div id="slideCountContainer" class="select-group">
                 <label for="slideCount">Número de Slides:</label>
                 <input type="number" id="slideCount" value="3" min="1" max="10">
+            </div>
+
+            <div class="select-group">
+                <label for="presentationStyle">Estilo Visual (para exportação):</label>
+                <select id="presentationStyle">
+                    <option value="Corporativo">Corporativo</option>
+                    <option value="Criativo">Criativo</option>
+                </select>
             </div>
             <div class="select-group">
                 <label for="logoUpload">Logótipo da Empresa (opcional):</label>
                 <label for="logoUpload" class="logo-upload-button">Escolher Arquivo</label>
                 <input type="file" id="logoUpload" accept="image/png, image/jpeg, image/svg+xml" hidden>
             </div>
-
-            <!-- NOVO: Opções de Posição do Logótipo -->
-            <div id="logoPositionGroup" class="select-group" style="display: none;">
-                <label>Posição do Logótipo:</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="logoPosition" value="bottom-right" checked> Inf. Direito</label>
-                    <label><input type="radio" name="logoPosition" value="bottom-left"> Inf. Esquerdo</label>
-                    <label><input type="radio" name="logoPosition" value="top-right"> Sup. Direito</label>
-                    <label><input type="radio" name="logoPosition" value="top-left"> Sup. Esquerdo</label>
-                </div>
-            </div>
         </div>
 
-        <div class="text-areas-container">
+        <div class="main-inputs-container single-input">
             <div class="text-box">
-                <textarea id="inputText" placeholder="Digite ou cole o tema ou o conteúdo base para sua apresentação..."></textarea>
-            </div>
-            <div class="text-box output-box">
-                <div class="output-header">
-                    <h3>Apresentação Gerada</h3>
-                    <div class="button-group">
-                        <button id="copyButton">Copiar Texto 📋</button>
-                        <button id="exportButton">Exportar .pptx 📊</button>
-                    </div>
-                </div>
-                <div id="outputText" class="output-placeholder">O resultado aparecerá aqui.</div>
-                <div id="loader" class="loader"></div>
+                <textarea id="inputText" placeholder="Cole aqui o seu tema ou o seu relatório completo..."></textarea>
             </div>
         </div>
 
-        <button id="submitButton">Gerar Apresentação 🚀</button>
+        <button id="submitButton">Gerar Conteúdo 🚀</button>
+
+        <div class="output-area-container">
+            <div class="output-header">
+                <h3>Resultado Gerado</h3>
+                <div class="button-group">
+                    <button id="copyButton">Copiar Texto 📋</button>
+                    <button id="exportButton">Exportar .pptx 📊</button>
+                </div>
+            </div>
+            <div id="loader" class="loader" style="display: none;"></div>
+            <div id="outputText" class="output-placeholder">O resultado aparecerá aqui.</div>
+        </div>
     </main>
 
     <footer>

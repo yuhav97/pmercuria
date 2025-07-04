@@ -4,98 +4,92 @@ require('dotenv').config();
 const express = require('express');
 const OpenAI = require('openai');
 const path = require('path');
+const { search } = require('duck-duck-scrape');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-if (!OPENAI_API_KEY) {
-  console.error("ERRO CRÍTICO: A variável de ambiente OPENAI_API_KEY não foi encontrada.");
-}
+if (!OPENAI_API_KEY) { console.error("ERRO: Chave da OpenAI não encontrada."); }
 
 const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
-// Rota da API para gerar a apresentação
-app.post('/api/revise', async (req, res) => {
+app.post('/api/generate', async (req, res) => {
     try {
-        const { text, tone, audience, slideCount } = req.body;
-        if (!text) return res.status(400).json({ error: 'O texto base é obrigatório.' });
+        const { inputText, outputType, improvementLevel, slideCount, tone, audience } = req.body;
+        if (!inputText) return res.status(400).json({ error: 'O texto de entrada é obrigatório.' });
         
-        // ETAPA 1: Gerar o texto dos slides
-        console.log('Etapa 1: Gerando texto dos slides...');
-        const textPromptSystem = `
-            Você é um especialista em criar conteúdo para apresentações. Sua tarefa é transformar um tema em slides.
-            O tom de voz deve ser **${tone}** e o público-alvo é **${audience}**.
-            Sua resposta DEVE ser um objeto JSON com a chave "slides".
-            O array "slides" deve conter **exatamente ${slideCount} objetos**. Nem mais, nem menos.
-            Cada objeto no array deve ter as chaves: "titulo", "subtitulo" e "texto".
-            NÃO adicione nenhum texto fora do objeto JSON.
-        `;
-        const textPromptUser = `Tema: "${text}"`;
+        let systemPrompt = '';
+        const userPrompt = `Texto de entrada ou Tema:\n\n${inputText}`;
 
-        const textCompletion = await openai.chat.completions.create({
-            messages: [{ role: 'system', content: textPromptSystem }, { role: 'user', content: textPromptUser }],
-            // --- INÍCIO DA ALTERAÇÃO ---
-            model: 'gpt-3.5-turbo', // Alterado para o melhor modelo da família GPT-3
-            // --- FIM DA ALTERAÇÃO ---
-            response_format: { type: "json_object" },
-        });
+        const improvementInstruction = (improvementLevel === 'enhance')
+            ? `Além de estruturar, reescreva os textos (títulos, subtítulos, resumos, insights) para serem mais claros, impactantes e profissionais, aplicando um tom de voz **${tone}** para um público de **${audience}**.`
+            : `Apenas estruture o conteúdo e corrija erros gramaticais, mantendo um tom de voz **${tone}** para um público de **${audience}**. Não altere o significado ou o estilo do texto original.`;
 
-        const slideData = JSON.parse(textCompletion.choices[0].message.content);
-        let slides = slideData.slides || [];
-        
-        // ETAPA 2.A: Gerar a imagem de capa
-        console.log('Etapa 2.A: Gerando imagem de capa...');
-        let coverImageUrl = null;
-        try {
-            const coverImagePrompt = `Uma imagem de capa de apresentação cinematográfica e dramática sobre o tema: "${text}". Estilo de arte digital, sem texto.`;
-            const coverImageResponse = await openai.images.generate({
-                model: "dall-e-3", prompt: coverImagePrompt, n: 1, size: "1792x1024", quality: "hd", response_format: "b64_json",
+        if (outputType === 'report') {
+            systemPrompt = `
+                Você é um analista de dados e designer de informação. Sua tarefa é analisar o texto de um relatório e estruturá-lo em um formato JSON visual.
+                ${improvementInstruction}
+                REGRAS:
+                1. Identifique as diferentes seções: resumos, KPIs, dados para gráficos, tabelas e insights.
+                2. Sua resposta DEVE ser um objeto JSON com a chave "slides", que é um array de objetos. Cada objeto "slide" agrupa componentes relacionados.
+                3. Cada "slide" deve ter "titulo", "subtitulo" e um array de "components".
+            `;
+        } else { // 'presentation'
+            const planPrompt = `Dado o tema "${inputText}", crie um esboço para uma apresentação de ${slideCount} slides. A resposta DEVE ser um objeto JSON com a chave "slide_outline", um array de ${slideCount} objetos, cada um com "titulo" e "subtitulo".`;
+            const planCompletion = await openai.chat.completions.create({
+                messages: [{ role: 'system', content: planPrompt }], model: 'gpt-4o-mini', response_format: { type: "json_object" },
             });
-            coverImageUrl = `data:image/png;base64,${coverImageResponse.data[0].b64_json}`;
-            console.log('... Imagem de capa gerada com sucesso!');
-        } catch (coverError) {
-            console.error('... ERRO ao gerar imagem de capa:', coverError.message);
+            const plan = JSON.parse(planCompletion.choices[0].message.content);
+
+            systemPrompt = `
+                Você é um especialista em criar apresentações. Para cada tópico no "Esboço dos Slides" abaixo, escreva o conteúdo textual.
+                ${improvementInstruction}
+                REGRAS:
+                1. Sua resposta DEVE ser um objeto JSON com a chave "slides", que é um array de objetos.
+                2. Cada objeto no array deve ter "titulo", "subtitulo" (do esboço), e um array "components" contendo um único componente do tipo "text_with_image".
+                3. O componente "text_with_image" deve ter "data" com as chaves "texto" (um parágrafo ou bullet points) e "image_prompt" (uma descrição curta para uma ilustração).
+            `;
+            const synthesisUserPrompt = `Esboço dos Slides (preencha este esboço):\n${JSON.stringify(plan.slide_outline, null, 2)}`;
+            const synthesisCompletion = await openai.chat.completions.create({
+                messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: synthesisUserPrompt }], model: 'gpt-4o', response_format: { type: "json_object" },
+            });
+            let finalData = JSON.parse(synthesisCompletion.choices[0].message.content);
+
+            if (finalData.slides) {
+                for (const slide of finalData.slides) {
+                    const component = slide.components[0];
+                    if (component && component.type === 'text_with_image') {
+                        const imagePrompt = component.data.image_prompt;
+                        try {
+                            const imageResponse = await openai.images.generate({
+                                model: "dall-e-3", prompt: `Ilustração vetorial minimalista: ${imagePrompt}. Fundo branco, sem texto.`, n: 1, size: "1024x1024", response_format: "b64_json",
+                            });
+                            component.data.ilustracao = `data:image/png;base64,${imageResponse.data[0].b64_json}`;
+                        } catch (imgError) {
+                            console.error(`Erro ao gerar imagem para: ${imagePrompt}`);
+                            component.data.ilustracao = null;
+                        }
+                    }
+                }
+            }
+            return res.json(finalData);
         }
 
-        // ETAPA 2.B: Gerar as ilustrações dos slides
-        console.log('Etapa 2.B: Gerando ilustrações dos slides...');
-        const slidesWithImages = [];
-        for (const slide of slides) {
-            const imageContext = `${slide.titulo} - ${slide.subtitulo || ''}`;
-            const imagePrompt = `Uma ilustração vetorial minimalista e conceitual sobre o tema: "${imageContext}". Fundo branco. Importante: a imagem não deve conter nenhum tipo de texto, letras ou palavras.`;
-            
-            try {
-                const imageResponse = await openai.images.generate({
-                    model: "dall-e-3", prompt: imagePrompt, n: 1, size: "1024x1024", quality: "standard", response_format: "b64_json", 
-                });
-                const imageUrl = `data:image/png;base64,${imageResponse.data[0].b64_json}`;
-                slidesWithImages.push({ ...slide, ilustracao: imageUrl });
-            } catch (imgError) {
-                console.error(`  ... ERRO ao gerar imagem para o slide: "${slide.titulo}"`);
-                slidesWithImages.push({ ...slide, ilustracao: null });
-            }
-        }
-        
-        res.json({ coverImage: coverImageUrl, slides: slidesWithImages });
+        const completion = await openai.chat.completions.create({
+            messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], model: 'gpt-4o', response_format: { type: "json_object" },
+        });
+        const structuredData = JSON.parse(completion.choices[0].message.content);
+        res.json(structuredData);
 
     } catch (error) {
         console.error("Erro detalhado no backend:", error);
-
-        if (error.status === 429) {
-            return res.status(429).json({ 
-                error: 'Limite de uso da API atingido. Por favor, verifique o seu plano e detalhes de faturação na sua conta da OpenAI.' 
-            });
-        }
-
         res.status(500).json({ error: `Ocorreu uma falha no servidor. Detalhes: ${error.message}` });
     }
 });
 
-// Lógica para servir os ficheiros estáticos e as páginas
 const publicPath = path.resolve(__dirname, '../public');
 app.use(express.static(publicPath));
 app.get('/app', (req, res) => { res.sendFile(path.join(publicPath, 'app.html')); });
@@ -104,7 +98,9 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// Lógica para iniciar o servidor localmente
+// --- INÍCIO DA SOLUÇÃO FINAL ---
+// Esta verificação permite que o servidor inicie localmente para testes,
+// mas não interfere com o ambiente da Vercel em produção.
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`Servidor de desenvolvimento rodando em http://localhost:${port}`);
@@ -113,3 +109,4 @@ if (require.main === module) {
 
 // Exporta a app para a Vercel
 module.exports = app;
+// --- FIM DA SOLUÇÃO FINAL ---
